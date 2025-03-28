@@ -16,7 +16,13 @@
 
 ## how to use
 
-首先确保 docker 连接到宿主机的训练结果上，如我连接到 /data/ 下
+使用的是这个 docker 
+
+registry.cn-hangzhou.aliyuncs.com/l2493_fc/ai_toolchain_ubuntu_20_xj3_gpu:v2.6.6-py38
+
+首先确保 docker 连接到宿主机的训练结果上，如我连接到 /data/ 下，对应的工作区如下，通过 docker 拿到 hb_mapper 命令跟量化仿真环境。
+
+root@b23f439f427a:/data/ai/x3/horizon_xj3_open_explorer_v2.6.6/ddk/samples/ai_toolchain/horizon_model_convert_sample/04_detection/03_yolov5s/mapper#
 
 ### 01_check.sh
 
@@ -84,14 +90,62 @@ yolov5s_config.yaml
   # -----------------------------------------------------------
   # the model file of floating-point ONNX neural network data
   # onnx_model: '../../../01_common/model_zoo/mapper/detection/yolov5_onnx_optimized/YOLOv5s.onnx'
-  onnx_model: '/data/ai/yolov5_x3_v2/weights/yolov5s.onnx'
+  # onnx_model: '/data/ai/yolov5_x3_v2/weights/yolov5s.onnx'
+  onnx_model: '/data/ai/yolov5_x3_v2/runs/exp23/weights/best.onnx'
 
 ```
+
+此时 model_output/yolov5s_672x672_nv12.bin 就是量化后板子可以使用的模型了。
 
 ### 04_inference.sh
 
 验证数据无关正确，只是为了验证量化与浮点前后的精度比较。
 
-此时用于对比仿真结果和电脑端结果比较。
+此时用于对比仿真量化结果和浮点结果进行损失比较 如 origin 或 quanti 两个比较，并给出评估结果。
 
-# horizon_xj3_model_convert
+需要修改 postprocess.py 的输出通道大小
+
+```
+
+    # 640*640 2 class
+    # model_output[0] = model_output[0].reshape([1, 80, 80, 3,
+    #                                            7]).transpose([0, 3, 1, 2, 4])
+    # model_output[1] = model_output[1].reshape([1, 40, 40, 3,
+    #                                            7]).transpose([0, 3, 1, 2, 4])
+    # model_output[2] = model_output[2].reshape([1, 20, 20, 3,
+    #                                            7]).transpose([0, 3, 1, 2, 4])
+
+    # 672*672 2 class 原有80分类的解析85=（80+4+1）修改为7=（2+4+1）
+    model_output[0] = model_output[0].reshape([1, 84, 84, 3,
+                                               7]).transpose([0, 3, 1, 2, 4])
+    model_output[1] = model_output[1].reshape([1, 42, 42, 3,
+                                               7]).transpose([0, 3, 1, 2, 4])
+    model_output[2] = model_output[2].reshape([1, 21, 21, 3,
+                                               7]).transpose([0, 3, 1, 2, 4])
+
+    # model_output[0] = model_output[0].reshape([1, 84, 84, 3,
+    #                                            85]).transpose([0, 3, 1, 2, 4])
+    # model_output[1] = model_output[1].reshape([1, 42, 42, 3,
+    #                                            85]).transpose([0, 3, 1, 2, 4])
+    # model_output[2] = model_output[2].reshape([1, 21, 21, 3,
+    #                                            85]).transpose([0, 3, 1, 2, 4])
+
+```
+
+还有输入大小和类别数量
+
+```
+    # yolov5s_config.NUM_CLASSES = 80
+    # yolov5s_config.CLASSES = MSCOCODetMetric.class_names
+    yolov5s_config.NUM_CLASSES = 2
+    yolov5s_config.CLASSES = ["fire", "smoke"]# MSCOCODetMetric.class_names
+    yolov5s_config.INPUT_SHAPE = (672, 672)
+    # yolov5s_config.INPUT_SHAPE = (640, 640)
+```
+
+以及标签 dls_coco_classes.names ，这个只影响绘图显示的字符，不影响结果。
+
+### 05_evaluate.sh
+
+给模型来一场大考，用于优化数据集和清洗错误数据，挑出来标注后加进去训练。
+
