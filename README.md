@@ -149,3 +149,42 @@ yolov5s_config.yaml
 
 给模型来一场大考，用于优化数据集和清洗错误数据，挑出来标注后加进去训练。
 
+## 如何从 672 降低到 640 或更低，但都要以 32 为倍数
+
+先 onnx 导出时修改为 640 ，此时 672 训练的权重不影响导出时设置为 640 的结构。
+
+export PYTHONPATH="$PWD" && python models/export.py --weights runs/exp23/weights/best.pt --img-size 640 --batch-size 1
+
+预处理改
+
+PadResizeTransformer(target_size=(640, 640)),
+
+量化这里改 
+
+yolov5s_config.INPUT_SHAPE = (640, 640)
+
+640*640 2 class
+
+最后测试输出结果正确的情况下，板端后处理实现是自适应的。
+
+## 如何从 80 类 改到 2 类
+
+训练和数据集同步修改
+
+v5v2_data/data/data.yaml
+yolov5_x3_v2/models/yolov5s.yaml
+
+nc: 2  # number of classes
+
+预处理验证改
+
+    yolov5s_config.NUM_CLASSES = 2
+    yolov5s_config.CLASSES = ["fire", "smoke"]# MSCOCODetMetric.class_names
+
+    仿真通道数改类别 + 5 即可。
+    原有80分类的解析85=（80+4+1）修改为7=（2+4+1）
+
+推理改一下标签数量就行，根据输出自动匹配的
+
+models/dls_yolov5s_672x672_nv12.bin
+models/dls_demo.yaml
