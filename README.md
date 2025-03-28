@@ -188,3 +188,5 @@ nc: 2  # number of classes
 
 models/dls_yolov5s_672x672_nv12.bin
 models/dls_demo.yaml
+
+测试 单核 cpu 20% 2 分类 672 36ms 640 32ms 双核 bpu 
