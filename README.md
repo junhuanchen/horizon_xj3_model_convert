@@ -24,6 +24,37 @@ registry.cn-hangzhou.aliyuncs.com/l2493_fc/ai_toolchain_ubuntu_20_xj3_gpu:v2.6.6
 
 root@b23f439f427a:/data/ai/x3/horizon_xj3_open_explorer_v2.6.6/ddk/samples/ai_toolchain/horizon_model_convert_sample/04_detection/03_yolov5s/mapper#
 
+wget -c ftp://vrftp.horizon.ai/Open_Explorer_gcc_9.3.0/2.6.6/horizon_xj3_open_explorer_v2.6.6_py38_20240717.tar.gz
+
+```
+dls@DESKTOP-DLS:~/ai/x3$ ls horizon_xj3_open_explorer_v2.6.6/ddk/samples/ai_toolchain/horizon_model_convert_sample/04_detection/03_yolov5s/mapper
+00_init.sh
+01_check.sh
+02_preprocess.sh
+03_build.sh
+04_inference.sh
+05_evaluate.sh
+README.md
+__pycache__
+calibration_data_rgb_f32
+coco_classes.names
+coco_metric.py
+demo.jpg
+dls_coco_classes.names
+evaluation.log
+hb_mapper_checker.log
+hb_mapper_makertbin.log
+hb_model_info.log
+hb_perf.log
+inference.log
+model_output
+postprocess.py
+preprocess.py
+yolov5s.bin
+yolov5s_config.yaml
+dls@DESKTOP-DLS:~/ai/x3$ 
+```
+
 ### 01_check.sh
 
 这里检查模型，和更换模型，默认 672 测试
